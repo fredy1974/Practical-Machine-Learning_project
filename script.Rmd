@@ -1,0 +1,94 @@
+---
+title: "Practical Machine Learning_project"
+author: "Fredy Alvarez"
+date: "15 de junio de 2019"
+output: html_document
+---
+Summary
+
+Introduction
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+Data:
+
+Training available at:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+Data test are available at:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+Objective:
+
+Predict the manner in which subjects did the exercise. This is the “classe” variable in the training set. The model will use the other variables to predict with. This report describes:
+* how the model is built
+* use of cross validation
+* an estimate of expected out of sample error
+
+```{r setup, include=FALSE}
+
+#Now load the functions and variables#
+
+library(rpart)
+library(randomForest)
+library(rpart.plot)
+library(caret)
+library(rattle)
+library(RColorBrewer)
+library(e1071)
+
+Training <- read.csv(url("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"), na.strings=c("NA","#DIV/0!",""))
+Testing <- read.csv(url("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"), na.strings=c("NA","#DIV/0!",""))
+
+```
+##Some files indicate missing data (i.e., “NA”, “#DIV/0!” and “”) are all set to NA so repair and remove##
+
+```{r}
+Testing = Testing[,colSums(is.na(Training))==0]
+Training = Training[,colSums(is.na(Training))==0]
+Testing = Testing[,-nearZeroVar(Training)]
+Training = Training[,-nearZeroVar(Training)]
+Testing = Testing[,-c(1:5)]
+Training = Training[,-c(1:5)]
+```
+
+```{r}
+inTraining = createDataPartition(y=Training$classe, p=0.6, list=FALSE)
+Training = Training[inTraining,]
+Testing = Training[-inTraining,]
+
+```
+Analisis of the Model
+
+```{r}
+plot(Training$classe, col="green", main="Bar Plot of the variable classe within the Training data set", xlab="classe levels", ylab="Frequency")
+
+```
+Now i will implemented random forest for classification and to make the regression 
+
+```{r}
+#Model#
+modelFitCT = rpart(classe ~ ., data=Training, method="class")
+modelFitRF = randomForest(classe ~ ., data=Training, method="class")
+predictionCT = predict(modelFitCT, Testing, type="class")
+predictionRF = predict(modelFitRF, Testing, type="class")
+```
+
+```{r}
+#Prediction#
+confusionMatrixCT = confusionMatrix(predictionCT, Testing$classe)
+confusionMatrixRF = confusionMatrix(predictionRF, Testing$classe)
+confusionMatrixCT
+```
+
+```{r}
+#Test of the model Validation#
+confusionMatrixRF
+```
+```{r}
+#Conclusion
+#The Random Forest prediction has a accuracy of 0.99 is better than the Classification Tree accuracy of 0.7433. I will prefer the Random Forest to predict our test cases#
+```
+
