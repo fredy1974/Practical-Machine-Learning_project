@@ -1,0 +1,120 @@
+
+Practical Machine Learning_project
+
+Fredy Alvarez
+
+15 de junio de 2019
+
+Summary
+
+Introduction
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+Data:
+
+Training available at:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+Data test are available at:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+Objective:
+
+Predict the manner in which subjects did the exercise. This is the “classe” variable in the training set. The model will use the other variables to predict with. This report describes: * how the model is built * use of cross validation * an estimate of expected out of sample error
+
+
+Some files indicate missing data (i.e., “NA”, “#DIV/0!” and “”) are all set to NA so repair and remove
+Testing = Testing[,colSums(is.na(Training))==0]
+Training = Training[,colSums(is.na(Training))==0]
+Testing = Testing[,-nearZeroVar(Training)]
+Training = Training[,-nearZeroVar(Training)]
+Testing = Testing[,-c(1:5)]
+Training = Training[,-c(1:5)]
+inTraining = createDataPartition(y=Training$classe, p=0.6, list=FALSE)
+Training = Training[inTraining,]
+Testing = Training[-inTraining,]
+
+Analisis of the Model
+plot(Training$classe, col="green", main="Bar Plot of the variable classe within the Training data set", xlab="classe levels", ylab="Frequency")
+
+ Now i will implemented random forest for classification and to make the regression
+#Model#
+modelFitCT = rpart(classe ~ ., data=Training, method="class")
+modelFitRF = randomForest(classe ~ ., data=Training, method="class")
+predictionCT = predict(modelFitCT, Testing, type="class")
+predictionRF = predict(modelFitRF, Testing, type="class")
+#Prediction#
+confusionMatrixCT = confusionMatrix(predictionCT, Testing$classe)
+confusionMatrixRF = confusionMatrix(predictionRF, Testing$classe)
+confusionMatrixCT
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1247  194   43   72   52
+##          B   19  482   26   52   26
+##          C   15  110  697   88   16
+##          D   76   94   53  555  120
+##          E    7    9    0   11  635
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.7695          
+##                  95% CI : (0.7572, 0.7815)
+##     No Information Rate : 0.2903          
+##     P-Value [Acc > NIR] : < 2.2e-16       
+##                                           
+##                   Kappa : 0.7064          
+##                                           
+##  Mcnemar's Test P-Value : < 2.2e-16       
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9142   0.5422   0.8510   0.7134   0.7479
+## Specificity            0.8918   0.9677   0.9410   0.9125   0.9930
+## Pos Pred Value         0.7755   0.7967   0.7527   0.6180   0.9592
+## Neg Pred Value         0.9621   0.9006   0.9677   0.9413   0.9470
+## Prevalence             0.2903   0.1892   0.1743   0.1656   0.1807
+## Detection Rate         0.2654   0.1026   0.1483   0.1181   0.1351
+## Detection Prevalence   0.3422   0.1288   0.1971   0.1911   0.1409
+## Balanced Accuracy      0.9030   0.7549   0.8960   0.8129   0.8705
+#Test of the model Validation#
+confusionMatrixRF
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1364    0    0    0    0
+##          B    0  889    0    0    0
+##          C    0    0  819    0    0
+##          D    0    0    0  778    0
+##          E    0    0    0    0  849
+## 
+## Overall Statistics
+##                                      
+##                Accuracy : 1          
+##                  95% CI : (0.9992, 1)
+##     No Information Rate : 0.2903     
+##     P-Value [Acc > NIR] : < 2.2e-16  
+##                                      
+##                   Kappa : 1          
+##                                      
+##  Mcnemar's Test P-Value : NA         
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Specificity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Pos Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Neg Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Prevalence             0.2903   0.1892   0.1743   0.1656   0.1807
+## Detection Rate         0.2903   0.1892   0.1743   0.1656   0.1807
+## Detection Prevalence   0.2903   0.1892   0.1743   0.1656   0.1807
+## Balanced Accuracy      1.0000   1.0000   1.0000   1.0000   1.0000
+#Conclusion
+#The Random Forest prediction has a accuracy of 0.99 is better than the Classification Tree accuracy of 0.7433. I will prefer the Random Forest to predict our test cases#
